@@ -31,7 +31,7 @@ public class Calculadora extends Stage
             vbox.setSpacing(10);
             vbox.setPadding(new Insets(10));
             scene = new Scene(vbox);
-            //scene.getStylesheets().add(getClass().getResource("../../../resources/styles/calculadora.css").toString());
+            scene.getStylesheets().add(getClass().getResource("/styles/calculadora.css").toExternalForm());
             this.setTitle("Calculadora");
             this.show();
         }

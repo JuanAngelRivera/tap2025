@@ -32,7 +32,7 @@ public class HelloApplication extends Application
         menu_bar.getMenus().addAll(menu_competencia1);
         vbox = new VBox(menu_bar);
         scene = new Scene(vbox);
-        //scene.getStylesheets().add(getClass().getResource("../../resources/styles/main.css").toString());
+        scene.getStylesheets().add(getClass().getResource("/styles/main.css").toExternalForm());
 
     }
 
