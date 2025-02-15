@@ -31,6 +31,7 @@ public class Calculadora extends Stage
             vbox.setSpacing(10);
             vbox.setPadding(new Insets(10));
             scene = new Scene(vbox);
+            //scene.getStylesheets().add(getClass().getResource("../../../resources/styles/calculadora.css").toString());
             this.setTitle("Calculadora");
             this.show();
         }
@@ -47,10 +48,20 @@ public class Calculadora extends Stage
                 for (int j = 0; j < 4; j++)//renglon
                 {
                     keypad[i][j] = new Button(button_text[j * 4 + i]);
+                    if(button_text[j * 4 + i].equals("="))
+                        keypad[i][j].setId("fontButton");
                     keypad[i][j].setPrefSize(50, 50);
+                    int ifinal = i;
+                    int jfinal = j;
+                    keypad[i][j].setOnAction(event -> pressed_button(button_text[jfinal * 4 + ifinal]));
                     grid_pane.add(keypad[i][j], i, j);
                 }
             }
+        }
+
+        public void pressed_button(String value)
+        {
+            text_field.appendText(value);
         }
 
         public Calculadora()
