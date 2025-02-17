@@ -35,6 +35,10 @@
     -fx-background-color:  #2c292b;
     -fx-highlight-fill: #df56a4;
 }
+#text-field-error
+{
+    -fx-font-size: 18;
+}
 .root
 {
     -fx-background-color: #2c292b;

@@ -8,7 +8,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -22,10 +21,13 @@ public class Calculadora extends Stage
         private Scene scene;
         private String [] button_text;
         private String operator;
+        private double left, right;
 
         public void create_ui() {
             button_text = new String[]{"7", "8", "9", "÷", "4", "5", "6", "x", "1", "2", "3"
                     , "+", ".", "0", "-", "="};
+            left = right = 0;
+            operator = "";
             create_keypad();
             text_field = new TextField("0");
             text_field.setEditable(false);
@@ -74,51 +76,93 @@ public class Calculadora extends Stage
 
         public void pressed_button(String value)
         {
+            if (text_field.getAlignment() == Pos.BASELINE_LEFT)
+            {
+                text_field.setId("text-field");
+                text_field.setText("0");
+                text_field.setAlignment(Pos.BASELINE_RIGHT);
+            }
             switch (value)
             {
                 case "=":
-                    result();
+                    System.out.println("SE PULSO EL IGUAL");
+                    if (!operator.equals(""))
+                    {
+                        right = Double.parseDouble(text_field.getText());
+                        result();
+                    }
                     break;
                 default:
-                    if(text_field.getText().equals("0") && !value.equals("."))
-                        text_field.setText(value);
+                    if (value.equals("+") || value.equals("-") || value.equals("x") || value.equals("÷"))
+                    {//si se presiona un simbolo de operacion
+                        System.out.println("SE PULSO SIMBOLO");
+                        if(right != 0) //si ya se tomaron dos campos y simbolo, primero hay que hacer la
+                            result();// primera operacion
+                        else
+                        {
+                            if (operator.equals("") )//no hay un operador
+                            {
+                                if (left == 0)
+                                    left = Double.parseDouble(text_field.getText());
+                                text_field.setText("0");
+                            }
+                            operator = value;
+                        }
+                    }
                     else
-                        text_field.appendText(value);
-                    set_simbol(value);
+                    {
+                        System.out.println("SE PULSO NUMERO O PUNTO");
+                        if(operator.equals("") && left != 0)//hay resultado en pantalla pero se introdujo
+                        {// otro numero
+                            left = 0;
+                            text_field.setText("0");
+                        }
+
+                        if(text_field.getText().equals("0") && !value.equals("."))
+                            text_field.setText(value);
+                        else
+                            text_field.appendText(value);
+                    }
                     break;
             }
-        }
-
-        public void set_simbol(String simbol)
-        {
-            System.out.println("Me gusta el pene");
         }
 
         public void result()
         {
-            String text = text_field.getText();
-            System.out.println(operator);
-            System.out.println(text);
-            String [] operation = text.split(operator);
-            double part1 = Double.parseDouble(operation[0]);
-            double part2 = Double.parseDouble(operation[1]);
+            System.out.println("ENTRO A RESULT");
+            System.out.println("Operacion: " + left + " " + operator + " " + right);
+            String exception = "";
             double result = 0;
 
             switch (operator)
             {
-                case "\\+":
-                    result = part1 + part2;
+                case "+":
+                    result = left + right;
                     break;
                 case "-":
-                    result = part1 - part2;
+                    result = left - right;
                     break;
                 case "x":
-                    result = part1 * part2;
+                    result = left * right;
                     break;
                 case "÷":
-                    result = part1 / part2;
+                    if (right == 0)
+                    {
+                        System.out.println("DIVISION ENTRE CERO");
+                        exception = "No se puede dividir entre cero";
+                    }
+                    else
+                        result = left / right;
+                    break;
+                default:
+                    System.out.println("Se trató de hacer operación sin ningun simbolo");
                     break;
             }
+            left = result;
+            right = 0;
+            operator = "";
+            System.out.println("DATOS AL FINAL: resultado = " + result + " operador " + operator + "  izquierda "
+                    + left + " derecha " + right);
             if (result % 1 == 0)
             {
                 long result_long = Math.round(result);
@@ -137,6 +181,13 @@ public class Calculadora extends Stage
                 System.out.println("El decimal format quedó como: " + decimal_format);
                 DecimalFormat df = new DecimalFormat(decimal_format);
                 text_field.setText(String.valueOf(df.format(result)));
+            }
+            System.out.println(exception);
+            if (!exception.equals(""))
+            {
+                text_field.setText(exception);
+                text_field.setId("text-field-error");
+                text_field.setAlignment(Pos.BASELINE_LEFT);
             }
         }
 
