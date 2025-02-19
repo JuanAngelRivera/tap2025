@@ -92,22 +92,23 @@ public class Calculadora extends Stage
                         result();
                     }
                     break;
+                case ".":
+                    if(!text_field.getText().contains("."))
+                        text_field.appendText(value);
+                    break;
                 default:
                     if (value.equals("+") || value.equals("-") || value.equals("x") || value.equals("÷"))
                     {//si se presiona un simbolo de operacion
+                        if(text_field.getText().equals("0") && left == 0 && operator.equals(""))
+                            text_field.setText(value);
                         System.out.println("SE PULSO SIMBOLO");
-                        if(right != 0) //si ya se tomaron dos campos y simbolo, primero hay que hacer la
-                            result();// primera operacion
-                        else
+                        if(operator.equals(""))//no hay aun simbolo de operacion
                         {
-                            if (operator.equals("") )//no hay un operador
-                            {
-                                if (left == 0)
-                                    left = Double.parseDouble(text_field.getText());
-                                text_field.setText("0");
-                            }
-                            operator = value;
+                            if (left == 0)
+                                left = Double.parseDouble(text_field.getText());
                         }
+                        text_field.setText("0");
+                        operator = value;
                     }
                     else
                     {
