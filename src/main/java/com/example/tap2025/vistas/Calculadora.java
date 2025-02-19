@@ -10,7 +10,6 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.text.DecimalFormat;
-import java.util.ArrayList;
 
 public class Calculadora extends Stage
     {
@@ -102,10 +101,16 @@ public class Calculadora extends Stage
                         System.out.println("SE PULSO SIMBOLO");
 
                         if(text_field.getText().equals("0") && left == 0 && operator.equals("") && value.equals("-"))
+                        {
                             text_field.setText(value);
+                            break;
+                        }
+
+                        if(text_field.getText().equals("No se puede dividir entre cero"))
+                            reset();
 
                         if(operator.equals("") && !text_field.getText().equals("-"))//no hay aun simbolo de operacion
-                        {
+                        {                                                           //ni inicia en -
                             if (left == 0)
                                 left = Double.parseDouble(text_field.getText());
                             text_field.setText("0");
@@ -116,10 +121,7 @@ public class Calculadora extends Stage
                     {
                         System.out.println("SE PULSO NUMERO O PUNTO");
                         if(operator.equals("") && left != 0)//hay resultado en pantalla pero se introdujo
-                        {// otro numero
-                            left = 0;
-                            text_field.setText("0");
-                        }
+                            reset();
 
                         if(text_field.getText().equals("0") && !value.equals("."))
                             text_field.setText(value);
@@ -161,9 +163,8 @@ public class Calculadora extends Stage
                     System.out.println("Se trató de hacer operación sin ningun simbolo");
                     break;
             }
+            reset();
             left = result;
-            right = 0;
-            operator = "";
             System.out.println("DATOS AL FINAL: resultado = " + result + " operador " + operator + "  izquierda "
                     + left + " derecha " + right);
             if (result % 1 == 0)
@@ -194,6 +195,13 @@ public class Calculadora extends Stage
             }
         }
 
+        public void reset()
+        {
+            left = 0;
+            right = 0;
+            operator = "";
+            text_field.setText("0");
+        }
         public Calculadora()
         {
             create_ui();
