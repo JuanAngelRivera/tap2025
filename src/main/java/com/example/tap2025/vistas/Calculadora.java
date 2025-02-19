@@ -99,16 +99,18 @@ public class Calculadora extends Stage
                 default:
                     if (value.equals("+") || value.equals("-") || value.equals("x") || value.equals("÷"))
                     {//si se presiona un simbolo de operacion
-                        if(text_field.getText().equals("0") && left == 0 && operator.equals(""))
-                            text_field.setText(value);
                         System.out.println("SE PULSO SIMBOLO");
-                        if(operator.equals(""))//no hay aun simbolo de operacion
+
+                        if(text_field.getText().equals("0") && left == 0 && operator.equals("") && value.equals("-"))
+                            text_field.setText(value);
+
+                        if(operator.equals("") && !text_field.getText().equals("-"))//no hay aun simbolo de operacion
                         {
                             if (left == 0)
                                 left = Double.parseDouble(text_field.getText());
+                            text_field.setText("0");
+                            operator = value;
                         }
-                        text_field.setText("0");
-                        operator = value;
                     }
                     else
                     {
