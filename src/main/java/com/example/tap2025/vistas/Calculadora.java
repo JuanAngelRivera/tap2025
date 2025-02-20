@@ -188,11 +188,14 @@ public class Calculadora extends Stage
             }
             System.out.println(exception);
             if (!exception.equals(""))
-            {
-                text_field.setText(exception);
-                text_field.setId("text-field-error");
-                text_field.setAlignment(Pos.BASELINE_LEFT);
-            }
+                error_message(exception);
+        }
+
+        public void error_message(String exception)
+        {
+            text_field.setText(exception);
+            text_field.setId("text-field-error");
+            text_field.setAlignment(Pos.BASELINE_LEFT);
         }
 
         public void reset()
