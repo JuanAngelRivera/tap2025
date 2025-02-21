@@ -1,5 +1,6 @@
 package com.example.tap2025;
 
+import com.example.tap2025.modelos.Conexion;
 import com.example.tap2025.vistas.*;
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -39,6 +40,7 @@ public class HelloApplication extends Application
     @Override
     public void start(Stage stage) throws IOException
     {
+        Conexion.create_connection();
         create_ui();
         stage.setScene(scene);
         stage.show();

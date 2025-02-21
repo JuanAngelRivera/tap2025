@@ -22,7 +22,8 @@ public class Calculadora extends Stage
         private String operator;
         private double left, right;
 
-        public void create_ui() {
+        public void create_ui()
+        {
             button_text = new String[]{"7", "8", "9", "÷", "4", "5", "6", "x", "1", "2", "3"
                     , "+", ".", "0", "-", "="};
             left = right = 0;
