@@ -18,17 +18,19 @@ public class HelloApplication extends Application
     VBox vbox;
     Menu menu_competencia1;
     MenuBar menu_bar;
-    MenuItem menu_item_calculadora, menu_item_restaurante;
+    MenuItem menu_item_calculadora, menu_item_restaurante, menu_item_rompecabezas;
     Button btn;
 
     private void create_ui()
     {
         menu_item_calculadora = new MenuItem("Calculadora");
         menu_item_restaurante = new MenuItem("Restaurante");
+        menu_item_rompecabezas = new MenuItem("Rompecabezas");
         menu_competencia1 = new Menu("Competencia 1");
         menu_item_calculadora.setOnAction(event -> new Calculadora());
         menu_item_restaurante.setOnAction(event -> new VentasRestaurante());
-        menu_competencia1.getItems().addAll(menu_item_calculadora, menu_item_restaurante);
+        menu_item_rompecabezas.setOnAction(event -> new Rompecabezas());
+        menu_competencia1.getItems().addAll(menu_item_calculadora, menu_item_restaurante, menu_item_rompecabezas);
         menu_bar = new MenuBar();
         menu_bar.getMenus().addAll(menu_competencia1);
         vbox = new VBox(menu_bar);
