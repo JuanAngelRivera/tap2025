@@ -21,11 +21,11 @@ public class Rompecabezas extends Stage
 {
     private Scene scene;
     private VBox vbox;
-    private HBox hbox_menu, hbox_menu_left, hbox_menu_right, hbox_interface;
-    private Pane pane_pieces, pane_board;
+    private HBox hbox_menu, hbox_menu_left, hbox_menu_right,hbox_board;
+    private Pane pane_pieces;
     private Button reset, change_difficulty;
     private Label best_time, timer;
-    private ArrayList<ImageView> pieces;
+    private ArrayList<Piece> pieces;
 
     public void create_ui()
     {
@@ -45,33 +45,27 @@ public class Rompecabezas extends Stage
         HBox.setHgrow(hbox_menu_right, Priority.ALWAYS);
 
         hbox_menu = new HBox(hbox_menu_left, hbox_menu_right);
-        hbox_menu.setPadding(new Insets(20, 20, 10, 20));
         hbox_menu.setSpacing(10);
 
         pane_pieces = new Pane();
-        pane_pieces.setPrefSize(300, 1000);
+        pane_pieces.setPrefSize(1000, 1000);
         pane_pieces.setId("pane_pieces");
         pane_pieces.widthProperty().addListener((observable, oldValue, newValue) ->
                 update_clip(pane_pieces));
         pane_pieces.heightProperty().addListener((observable, oldValue, newValue) ->
                 update_clip(pane_pieces));
-        pane_board = new Pane();
-        pane_board.setId("pane_pieces");
-        pane_board.setPrefSize(1000, 1000);
+        Rectangle rectangle = new Rectangle(pane_pieces.getWidth(), pane_pieces.getHeight());
+        pane_pieces.setClip(rectangle);
 
-        hbox_interface = new HBox(pane_pieces, pane_board);
-        hbox_interface.setSpacing(10);
-        hbox_interface.setAlignment(Pos.CENTER);
-        hbox_interface.setPadding(new Insets(10, 10, 30, 10));
+        hbox_board = new HBox(pane_pieces);
 
-        vbox = new VBox(hbox_menu, hbox_interface);
+        vbox = new VBox(hbox_menu, hbox_board);
+        vbox.setPadding(new Insets(20, 20, 20, 20));
+        vbox.setSpacing(10);
         scene = new Scene(vbox);
         scene.getStylesheets().add(getClass().getResource("/styles/rompecabezas.css").toExternalForm());
         setTitle("Rompecabezas");
         setMaximized(true);
-
-        Rectangle rectangle = new Rectangle(pane_pieces.getWidth(), pane_pieces.getHeight());
-        pane_pieces.setClip(rectangle);
     }
 
     private void update_clip(Pane pane)
@@ -133,7 +127,7 @@ public class Rompecabezas extends Stage
 
     private void create_pieces(int n)
     {
-        ArrayList<ImageView> pieces = new ArrayList<>();
+        ArrayList<Piece> pieces = new ArrayList<>();
         String direction = "/images/";
         int size = (int)(Math.pow(n, 0.5));
         switch (n)
@@ -153,12 +147,23 @@ public class Rompecabezas extends Stage
             for (int j = 0; j < size; j++)
             {
                 String new_direction = direction +  "" + i + "-" + j + ".png";
-                Piece piece = new Piece(new_direction, pane_pieces, pane_board);
+                Piece piece = new Piece(new_direction);
                 pieces.add(piece);
-                piece.set_position(pane_pieces);
             }
         }
+        board_config(size, pieces.get(0));
+        for (Piece piece :  pieces)
+        {
+            piece.set_position(pane_pieces);
+        }
         show();
+    }
+
+    void board_config(int size, ImageView piece)
+    {
+        pane_pieces.setPrefSize(piece.getImage().getWidth() * size, piece.getImage().getHeight() * size);
+        hbox_board.setAlignment(Pos.CENTER);
+        hbox_board.setPadding(new Insets(100, 0, 0 ,0));
     }
 
     public Rompecabezas()
@@ -174,40 +179,34 @@ class Piece extends ImageView
     void set_position (Pane pane)
     {
         Random random = new Random();
-        double x = random.nextDouble() * (pane.getWidth() - getFitWidth());
-        double y = random.nextDouble() * (pane.getHeight() - getFitHeight());
+        double x = random.nextDouble() * (pane.getWidth() - getImage().getWidth());
+        double y = random.nextDouble() * (pane.getHeight() - getImage().getHeight());
 
         setLayoutX(x);
         setLayoutY(y);
         pane.getChildren().add(this);
     }
 
-    private void set_draggable_piece(Pane pieces, Pane board)
+    private void set_draggable_piece()
     {
         double[] initial_position = new double[2];
         setOnMousePressed(e ->
         {
             initial_position[0] = e.getSceneX() - getLayoutX();
             initial_position[1] = e.getSceneY() - getLayoutY();
-            Pane parent = (Pane) getParent();
-            if(parent == pieces)
-            {
-                pieces.getChildren().remove(this);
-                board.getChildren().add(this);
-            }
         });
         setOnMouseDragged(e ->
         {
             double offset_x = e.getSceneX() - initial_position[0];
             double offset_y = e.getSceneY() - initial_position[1];
-x|            setLayoutX(offset_x);
+            setLayoutX(offset_x);
             setLayoutY(offset_y);
         });
     }
 
-    Piece(String direction, Pane pieces, Pane board)
+    Piece(String direction)
     {
         setImage(new Image(getClass().getResourceAsStream(direction)));
-        set_draggable_piece(pieces, board);
+        set_draggable_piece();
     }
 }
