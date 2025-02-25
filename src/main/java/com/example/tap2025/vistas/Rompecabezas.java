@@ -142,6 +142,10 @@ public class Rompecabezas extends Stage
                 direction += "puzzle_hard_mode/";
                 break;
         }
+        System.out.println("TAMAÑO DEL TABLERO " + pane_pieces.getWidth() + " x " + pane_pieces.getHeight());
+        Piece config = new Piece(direction +  "0-0.png");
+        board_config(size, config);
+        System.out.println("TAMAÑO DEL TABLERO " + pane_pieces.getWidth() + " x " + pane_pieces.getHeight());
         for (int i = 0; i < size; i++)
         {
             for (int j = 0; j < size; j++)
@@ -151,7 +155,6 @@ public class Rompecabezas extends Stage
                 pieces.add(piece);
             }
         }
-        board_config(size, pieces.get(0));
         for (Piece piece :  pieces)
         {
             piece.set_position(pane_pieces);
@@ -179,12 +182,12 @@ class Piece extends ImageView
     void set_position (Pane pane)
     {
         Random random = new Random();
-        double x = random.nextDouble() * (pane.getWidth() - getImage().getWidth());
-        double y = random.nextDouble() * (pane.getHeight() - getImage().getHeight());
+        double x = random.nextDouble() * (getImage().getWidth());
+        double y = random.nextDouble() * (getImage().getHeight());
+        pane.getChildren().add(this);
 
         setLayoutX(x);
         setLayoutY(y);
-        pane.getChildren().add(this);
     }
 
     private void set_draggable_piece()
@@ -201,6 +204,10 @@ class Piece extends ImageView
             double offset_y = e.getSceneY() - initial_position[1];
             setLayoutX(offset_x);
             setLayoutY(offset_y);
+        });
+        setOnMouseReleased(e ->
+        {
+
         });
     }
 
