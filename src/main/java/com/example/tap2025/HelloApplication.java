@@ -28,7 +28,7 @@ public class HelloApplication extends Application
         menu_item_rompecabezas = new MenuItem("Rompecabezas");
         menu_competencia1 = new Menu("Competencia 1");
         menu_item_calculadora.setOnAction(event -> new Calculadora());
-        menu_item_restaurante.setOnAction(event -> new VentasRestaurante());
+        menu_item_restaurante.setOnAction(event -> new ListaClientes());
         menu_item_rompecabezas.setOnAction(event -> new Rompecabezas());
         menu_competencia1.getItems().addAll(menu_item_calculadora, menu_item_restaurante, menu_item_rompecabezas);
         menu_bar = new MenuBar();
