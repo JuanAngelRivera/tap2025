@@ -18,7 +18,6 @@ public class Conexion
             Class.forName("com.mysql.cj.jdbc.Driver");
             connection = DriverManager.getConnection("jdbc:mysql://" + HOST + ":" + PORT + "/" + DB, USER, PASSWORD);
             System.out.println("CONEXION ESTABLECIDA ");
-
         }
         catch(Exception e)
         {
