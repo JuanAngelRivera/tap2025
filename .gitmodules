@@ -1,0 +1,3 @@
+[submodule "modulo"]
+	path = modulo
+	url = https://github.com/JuanAngelRivera/submodulo-restaurante.git
