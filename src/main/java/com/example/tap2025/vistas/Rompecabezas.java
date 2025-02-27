@@ -152,7 +152,10 @@ public class Rompecabezas extends Stage
             {
                 String new_direction = direction +  "" + i + "-" + j + ".png";
                 Piece piece = new Piece(new_direction);
+                piece.correct_x = (i * piece.getImage().getWidth());
+                piece.correct_y = (j * piece.getImage().getHeight());
                 pieces.add(piece);
+                //System.out.println("Pieza " + i + " " + j + " x correcta " + piece.correct_x + " y correcta " + piece.correct_y );
             }
         }
         for (Piece piece :  pieces)
@@ -169,6 +172,11 @@ public class Rompecabezas extends Stage
         hbox_board.setPadding(new Insets(100, 0, 0 ,0));
     }
 
+    void check_completed()
+    {
+
+    }
+
     public Rompecabezas()
     {
         create_ui();
@@ -179,6 +187,8 @@ public class Rompecabezas extends Stage
 
 class Piece extends ImageView
 {
+    public double correct_x;
+    public double correct_y;
     void set_position (Pane pane)
     {
         Random random = new Random();
@@ -195,20 +205,34 @@ class Piece extends ImageView
         double[] initial_position = new double[2];
         setOnMousePressed(e ->
         {
-            initial_position[0] = e.getSceneX() - getLayoutX();
-            initial_position[1] = e.getSceneY() - getLayoutY();
+                initial_position[0] = e.getSceneX() - getLayoutX();
+                initial_position[1] = e.getSceneY() - getLayoutY();
         });
         setOnMouseDragged(e ->
         {
-            double offset_x = e.getSceneX() - initial_position[0];
-            double offset_y = e.getSceneY() - initial_position[1];
-            setLayoutX(offset_x);
-            setLayoutY(offset_y);
+                double offset_x = e.getSceneX() - initial_position[0];
+                double offset_y = e.getSceneY() - initial_position[1];
+                setLayoutX(offset_x);
+                setLayoutY(offset_y);
         });
         setOnMouseReleased(e ->
         {
+            double tolerance = getImage().getWidth() / 3;
 
+            if(Math.abs(getLayoutX() - correct_x) <= tolerance && Math.abs(getLayoutY() - correct_y) <= tolerance)
+            {
+                setLayoutX(correct_x);
+                setLayoutY(correct_y);
+                disable_drag();
+            }
         });
+    }
+
+    private void disable_drag()
+    {
+        setOnMousePressed(null);
+        setOnMouseDragged(null);
+        setOnMouseReleased(null);
     }
 
     Piece(String direction)
