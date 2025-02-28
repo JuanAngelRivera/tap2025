@@ -38,7 +38,11 @@ public class Rompecabezas extends Stage
         reset = new Button("Reiniciar");
         reset.setOnAction(e -> reset());
         change_difficulty = new Button("Cambiar dificultad");
-        change_difficulty.setOnAction(e -> create_menu_selection());
+        change_difficulty.setOnAction(e ->
+        {
+            stop_time();
+            mode_menu.show();
+        });
         hbox_menu_left = new HBox(reset, change_difficulty);
         hbox_menu_left.setSpacing(10);
         hbox_menu_left.setAlignment(Pos.CENTER_LEFT);
@@ -132,7 +136,10 @@ public class Rompecabezas extends Stage
 
     private void config(int n)
     {
-        create_pieces(n);
+        if(pieces.size() == n)
+            reset();
+        else
+            create_pieces(n);
         mode_menu.hide();
     }
 
@@ -164,7 +171,6 @@ public class Rompecabezas extends Stage
                 Piece piece = new Piece(new_direction, this::check_completed);
                 piece.correct_x = (i * piece.getImage().getWidth());
                 piece.correct_y = (j * piece.getImage().getHeight());
-                piece.setId("pieces");
                 pieces.add(piece);
                 //System.out.println("Pieza " + i + " " + j + " x correcta " + piece.correct_x + " y correcta " + piece.correct_y );
             }
