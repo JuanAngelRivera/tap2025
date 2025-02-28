@@ -1,6 +1,7 @@
 package com.example.tap2025;
 
-import com.example.tap2025.modelos.Conexion;
+import src.com.restaurante.modelos.*;
+import src.com.restaurante.vistas.*;
 import com.example.tap2025.vistas.*;
 import javafx.application.Application;
 import javafx.scene.Scene;

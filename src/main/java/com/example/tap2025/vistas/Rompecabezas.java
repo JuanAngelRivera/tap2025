@@ -56,7 +56,7 @@ public class Rompecabezas extends Stage
 
         pane_pieces = new Pane();
         pane_pieces.setPrefSize(1000, 1000);
-        pane_pieces.setId("pane_pieces");
+        pane_pieces.setId("pane-pieces");
 
         hbox_board = new HBox(pane_pieces);
 
@@ -164,6 +164,7 @@ public class Rompecabezas extends Stage
                 Piece piece = new Piece(new_direction, this::check_completed);
                 piece.correct_x = (i * piece.getImage().getWidth());
                 piece.correct_y = (j * piece.getImage().getHeight());
+                piece.setId("pieces");
                 pieces.add(piece);
                 //System.out.println("Pieza " + i + " " + j + " x correcta " + piece.correct_x + " y correcta " + piece.correct_y );
             }

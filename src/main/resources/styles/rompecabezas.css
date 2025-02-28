@@ -16,7 +16,7 @@
     -fx-text-alignment: center;
     -fx-font-size: 16pt "Verdana";
 }
-#pane_pieces
+#pane-pieces
 {
     -fx-background-color: #67495e;
     -fx-border-color: white;
