@@ -12,7 +12,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import java.util.ArrayList;
 import java.util.Random;
@@ -25,11 +24,13 @@ public class Rompecabezas extends Stage
     private Pane pane_pieces;
     private Button reset, change_difficulty;
     private Label best_time, timer;
-    private ArrayList<Piece> pieces;
+    private ArrayList<Piece> pieces = new ArrayList<>();
+    private int placed_pieces = 0;
 
     public void create_ui()
     {
         reset = new Button("Reiniciar");
+        reset.setOnAction(e -> reset());
         change_difficulty = new Button("Cambiar dificultad");
         change_difficulty.setOnAction(e -> create_menu_selection());
         hbox_menu_left = new HBox(reset, change_difficulty);
@@ -50,12 +51,6 @@ public class Rompecabezas extends Stage
         pane_pieces = new Pane();
         pane_pieces.setPrefSize(1000, 1000);
         pane_pieces.setId("pane_pieces");
-        pane_pieces.widthProperty().addListener((observable, oldValue, newValue) ->
-                update_clip(pane_pieces));
-        pane_pieces.heightProperty().addListener((observable, oldValue, newValue) ->
-                update_clip(pane_pieces));
-        Rectangle rectangle = new Rectangle(pane_pieces.getWidth(), pane_pieces.getHeight());
-        pane_pieces.setClip(rectangle);
 
         hbox_board = new HBox(pane_pieces);
 
@@ -66,21 +61,6 @@ public class Rompecabezas extends Stage
         scene.getStylesheets().add(getClass().getResource("/styles/rompecabezas.css").toExternalForm());
         setTitle("Rompecabezas");
         setMaximized(true);
-    }
-
-    private void update_clip(Pane pane)
-    {
-        if (pane.getClip() == null)
-        {
-            Rectangle clip = new Rectangle(pane.getWidth(), pane.getHeight());
-            pane.setClip(clip);
-        }
-        else
-        {
-            Rectangle clip = (Rectangle) pane.getClip();
-            clip.setWidth(pane.getWidth());
-            clip.setHeight(pane.getHeight());
-        }
     }
 
     public void create_menu_selection()
@@ -120,6 +100,28 @@ public class Rompecabezas extends Stage
         menu_stage.show();
     }
 
+    public void win_menu()
+    {
+        Label label = new Label("FELICIDADES! COMPLETASTE EL ROMPECABEZAS");
+        Label time = new Label("Tu tiempo: --:--:--");
+        HBox hbox = new HBox(reset, change_difficulty);
+        HBox.setHgrow(hbox, Priority.ALWAYS);
+        hbox.setAlignment(Pos.CENTER);
+        hbox.setSpacing(10);
+        VBox vbox = new VBox(label, time, hbox);
+        vbox.setPadding(new Insets(10, 10, 10, 10));
+        vbox.setSpacing(10);
+        vbox.setAlignment(Pos.CENTER);
+        Scene scene = new Scene(vbox);
+        scene.getStylesheets().add(getClass().getResource("/styles/rompecabezas.css").toExternalForm());
+        Stage stage = new Stage();
+        stage.setScene(scene);
+        stage.setTitle("GANASTE");
+        stage.setResizable(false);
+        stage.show();
+
+    }
+
     private void config(int n)
     {
         create_pieces(n);
@@ -127,7 +129,6 @@ public class Rompecabezas extends Stage
 
     private void create_pieces(int n)
     {
-        ArrayList<Piece> pieces = new ArrayList<>();
         String direction = "/images/";
         int size = (int)(Math.pow(n, 0.5));
         switch (n)
@@ -142,22 +143,21 @@ public class Rompecabezas extends Stage
                 direction += "puzzle_hard_mode/";
                 break;
         }
-        System.out.println("TAMAÑO DEL TABLERO " + pane_pieces.getWidth() + " x " + pane_pieces.getHeight());
-        Piece config = new Piece(direction +  "0-0.png");
+        Piece config = new Piece(direction +  "0-0.png", null);
         board_config(size, config);
-        System.out.println("TAMAÑO DEL TABLERO " + pane_pieces.getWidth() + " x " + pane_pieces.getHeight());
         for (int i = 0; i < size; i++)
         {
             for (int j = 0; j < size; j++)
             {
                 String new_direction = direction +  "" + i + "-" + j + ".png";
-                Piece piece = new Piece(new_direction);
+                Piece piece = new Piece(new_direction, this::check_completed);
                 piece.correct_x = (i * piece.getImage().getWidth());
                 piece.correct_y = (j * piece.getImage().getHeight());
                 pieces.add(piece);
                 //System.out.println("Pieza " + i + " " + j + " x correcta " + piece.correct_x + " y correcta " + piece.correct_y );
             }
         }
+        System.out.println(pieces.size());
         for (Piece piece :  pieces)
         {
             piece.set_position(pane_pieces);
@@ -174,7 +174,18 @@ public class Rompecabezas extends Stage
 
     void check_completed()
     {
+        placed_pieces++;
+        if (placed_pieces == pieces.size())
+            win_menu();
+    }
 
+    void reset()
+    {
+        placed_pieces = 0;
+        int total_pieces = pieces.size();
+        pane_pieces.getChildren().clear();
+        pieces.clear();
+        create_pieces(total_pieces);
     }
 
     public Rompecabezas()
@@ -189,6 +200,7 @@ class Piece extends ImageView
 {
     public double correct_x;
     public double correct_y;
+    private Runnable on_piece_placed;
     void set_position (Pane pane)
     {
         Random random = new Random();
@@ -218,12 +230,13 @@ class Piece extends ImageView
         setOnMouseReleased(e ->
         {
             double tolerance = getImage().getWidth() / 3;
-
             if(Math.abs(getLayoutX() - correct_x) <= tolerance && Math.abs(getLayoutY() - correct_y) <= tolerance)
             {
                 setLayoutX(correct_x);
                 setLayoutY(correct_y);
                 disable_drag();
+                if(on_piece_placed != null)
+                    on_piece_placed.run();
             }
         });
     }
@@ -235,9 +248,15 @@ class Piece extends ImageView
         setOnMouseReleased(null);
     }
 
-    Piece(String direction)
+    public boolean placed_correctly()
+    {
+        return (Math.abs(getLayoutX()) == correct_x && Math.abs(getLayoutY()) == correct_y);
+    }
+
+    Piece(String direction, Runnable on_piece_placed)
     {
         setImage(new Image(getClass().getResourceAsStream(direction)));
         set_draggable_piece();
+        this.on_piece_placed = on_piece_placed;
     }
 }
