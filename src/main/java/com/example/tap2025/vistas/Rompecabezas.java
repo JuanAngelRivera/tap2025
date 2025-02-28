@@ -168,7 +168,6 @@ public class Rompecabezas extends Stage
                 //System.out.println("Pieza " + i + " " + j + " x correcta " + piece.correct_x + " y correcta " + piece.correct_y );
             }
         }
-        System.out.println(pieces.size());
         for (Piece piece :  pieces)
         {
             piece.set_position(pane_pieces);
@@ -292,6 +291,7 @@ class Piece extends ImageView
                 disable_drag();
                 if(on_piece_placed != null)
                     on_piece_placed.run();
+                toBack();
             }
         });
     }
