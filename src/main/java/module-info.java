@@ -5,6 +5,7 @@ module com.example.tap2025
     requires org.kordamp.bootstrapfx.core;
     requires mysql.connector.j;
     requires java.sql;
+    requires java.management;
 
     opens com.example.tap2025 to javafx.fxml;
     exports com.example.tap2025;

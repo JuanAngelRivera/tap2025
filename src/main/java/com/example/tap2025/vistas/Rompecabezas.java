@@ -1,8 +1,9 @@
 package com.example.tap2025.vistas;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -13,6 +14,8 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.util.Duration;
+
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -23,9 +26,12 @@ public class Rompecabezas extends Stage
     private HBox hbox_menu, hbox_menu_left, hbox_menu_right,hbox_board;
     private Pane pane_pieces;
     private Button reset, change_difficulty;
-    private Label best_time, timer;
+    private Label best_time, timer, final_time;
     private ArrayList<Piece> pieces = new ArrayList<>();
-    private int placed_pieces = 0;
+    private int placed_pieces, seconds, miliseconds, minutes;
+    private Timeline timeline;
+    private boolean timer_started;
+    private Stage win_menu, mode_menu;
 
     public void create_ui()
     {
@@ -90,45 +96,50 @@ public class Rompecabezas extends Stage
         hbox.setPadding(new Insets(10, 10, 10, 10));
         Scene menu_scene = new Scene(hbox);
         menu_scene.getStylesheets().add(getClass().getResource("/styles/rompecabezas.css").toExternalForm());
-        Stage menu_stage = new Stage();
-        menu_stage.setScene(menu_scene);
-        menu_stage.setTitle("Selección de dificultad");
-        menu_stage.setResizable(false);
-        easy.setOnAction(e -> { config(4); menu_stage.close(); });
-        medium.setOnAction(e -> { config(9); menu_stage.close(); });
-        hard.setOnAction(e -> { config(16); menu_stage.close(); });
-        menu_stage.show();
+        mode_menu = new Stage();
+        mode_menu.setScene(menu_scene);
+        mode_menu.setTitle("Selección de dificultad");
+        mode_menu.setResizable(false);
+        easy.setOnAction(e -> config(4));
+        medium.setOnAction(e -> config(9));
+        hard.setOnAction(e -> config(16));
+        mode_menu.show();
     }
 
     public void win_menu()
     {
         Label label = new Label("FELICIDADES! COMPLETASTE EL ROMPECABEZAS");
-        Label time = new Label("Tu tiempo: --:--:--");
+        reset = new Button("Reiniciar");
+        reset.setOnAction(e -> reset());
+        change_difficulty = new Button("Cambiar dificultad");
+        change_difficulty.setOnAction(e -> create_menu_selection());
         HBox hbox = new HBox(reset, change_difficulty);
         HBox.setHgrow(hbox, Priority.ALWAYS);
         hbox.setAlignment(Pos.CENTER);
         hbox.setSpacing(10);
-        VBox vbox = new VBox(label, time, hbox);
+        final_time = new Label("Contador: --:--:--");
+        VBox vbox = new VBox(label, final_time, hbox);
         vbox.setPadding(new Insets(10, 10, 10, 10));
         vbox.setSpacing(10);
         vbox.setAlignment(Pos.CENTER);
         Scene scene = new Scene(vbox);
         scene.getStylesheets().add(getClass().getResource("/styles/rompecabezas.css").toExternalForm());
-        Stage stage = new Stage();
-        stage.setScene(scene);
-        stage.setTitle("GANASTE");
-        stage.setResizable(false);
-        stage.show();
-
+        win_menu = new Stage();
+        win_menu.setScene(scene);
+        win_menu.setTitle("GANASTE");
+        win_menu.setResizable(false);
     }
 
     private void config(int n)
     {
         create_pieces(n);
+        mode_menu.hide();
     }
 
     private void create_pieces(int n)
     {
+        timer_started = false;
+        placed_pieces = seconds = miliseconds = minutes = 0;
         String direction = "/images/";
         int size = (int)(Math.pow(n, 0.5));
         switch (n)
@@ -163,6 +174,7 @@ public class Rompecabezas extends Stage
             piece.set_position(pane_pieces);
         }
         show();
+        start_time();
     }
 
     void board_config(int size, ImageView piece)
@@ -176,22 +188,64 @@ public class Rompecabezas extends Stage
     {
         placed_pieces++;
         if (placed_pieces == pieces.size())
-            win_menu();
+        {
+            stop_time();
+            win_menu.show();
+        }
     }
 
     void reset()
     {
-        placed_pieces = 0;
+        stop_time();
         int total_pieces = pieces.size();
         pane_pieces.getChildren().clear();
         pieces.clear();
         create_pieces(total_pieces);
+
+        if(win_menu.isShowing())
+            win_menu.hide();
+    }
+
+    void start_time()
+    {
+        if(timer_started) return;
+        timer_started = true;
+
+        timeline = new Timeline(new KeyFrame(Duration.millis(1), e ->
+        {
+            miliseconds++;
+            if (miliseconds == 1000)
+            {
+                seconds++;
+                miliseconds = 0;
+            }
+            if(seconds == 60)
+            {
+                seconds = 0;
+                minutes++;
+            }
+            String text = "Tu tiempo: " + (minutes == 0 ? "0:" : minutes + ":") + (seconds == 0 ? "0:" : seconds + ":") +
+                    (miliseconds == 0 ? "0-:" : miliseconds);
+            timer.setText(text);
+        }));
+        timeline.setCycleCount(Timeline.INDEFINITE);
+        timeline.play();
+    }
+
+    private void stop_time()
+    {
+        if (timeline != null)
+        {
+            timeline.stop();
+            final_time.setText(timer.getText());
+        }
     }
 
     public Rompecabezas()
     {
         create_ui();
         create_menu_selection();
+        win_menu();
         setScene(scene);
     }
 }
@@ -219,6 +273,7 @@ class Piece extends ImageView
         {
                 initial_position[0] = e.getSceneX() - getLayoutX();
                 initial_position[1] = e.getSceneY() - getLayoutY();
+
         });
         setOnMouseDragged(e ->
         {
