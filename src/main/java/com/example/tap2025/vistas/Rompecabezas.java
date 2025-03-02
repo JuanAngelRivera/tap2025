@@ -40,7 +40,7 @@ public class Rompecabezas extends Stage
         change_difficulty = new Button("Cambiar dificultad");
         change_difficulty.setOnAction(e ->
         {
-            stop_time();
+            timeline.stop();
             mode_menu.show();
         });
         hbox_menu_left = new HBox(reset, change_difficulty);
@@ -71,6 +71,7 @@ public class Rompecabezas extends Stage
         scene.getStylesheets().add(getClass().getResource("/styles/rompecabezas.css").toExternalForm());
         setTitle("Rompecabezas");
         setMaximized(true);
+        setResizable(false);
     }
 
     public void create_menu_selection()
@@ -108,6 +109,11 @@ public class Rompecabezas extends Stage
         medium.setOnAction(e -> config(9));
         hard.setOnAction(e -> config(16));
         mode_menu.show();
+        mode_menu.setOnHidden(e ->
+        {
+            if (placed_pieces != pieces.size())
+                timeline.play();
+        });
     }
 
     public void win_menu()
@@ -140,11 +146,18 @@ public class Rompecabezas extends Stage
             reset();
         else
             create_pieces(n);
+        win_menu.hide();
         mode_menu.hide();
     }
 
     private void create_pieces(int n)
     {
+        if(!pieces.isEmpty())
+        {
+            pieces.clear();
+            pane_pieces.getChildren().clear();
+        }
+
         timer_started = false;
         placed_pieces = seconds = miliseconds = minutes = 0;
         String direction = "/images/";
@@ -161,33 +174,36 @@ public class Rompecabezas extends Stage
                 direction += "puzzle_hard_mode/";
                 break;
         }
-        Piece config = new Piece(direction +  "0-0.png", null);
-        board_config(size, config);
+        board_config(size, new Piece(direction +  "0-0.png", null, size));
         for (int i = 0; i < size; i++)
         {
             for (int j = 0; j < size; j++)
             {
                 String new_direction = direction +  "" + i + "-" + j + ".png";
-                Piece piece = new Piece(new_direction, this::check_completed);
+                Piece piece = new Piece(new_direction, this::check_completed, size);
                 piece.correct_x = (i * piece.getImage().getWidth());
                 piece.correct_y = (j * piece.getImage().getHeight());
                 pieces.add(piece);
+                System.out.println("TAMAÑO PARA PIEZA " + i + "-" + j + " " + piece.getImage().getWidth() + "x" + piece.getImage().getHeight());
                 //System.out.println("Pieza " + i + " " + j + " x correcta " + piece.correct_x + " y correcta " + piece.correct_y );
             }
         }
         for (Piece piece :  pieces)
         {
-            piece.set_position(pane_pieces);
+            piece.set_position(pane_pieces, size);
         }
         show();
         start_time();
+        System.out.println("TAMAÑO H DEL PANE " + pane_pieces.getWidth());
+        System.out.println("TAMAÑO DE LA PIEZA " + pieces.get(0).getImage().getWidth());
+        System.out.println("TAMAÑO DE TODAS LAS PIEZAS " + (pieces.get(0).getImage().getWidth() * size));
     }
 
     void board_config(int size, ImageView piece)
     {
         pane_pieces.setPrefSize(piece.getImage().getWidth() * size, piece.getImage().getHeight() * size);
         hbox_board.setAlignment(Pos.CENTER);
-        hbox_board.setPadding(new Insets(100, 0, 0 ,0));
+        hbox_board.setPadding( new Insets( piece.getImage().getHeight() /size, 0, 0, 0));
     }
 
     void check_completed()
@@ -261,18 +277,20 @@ class Piece extends ImageView
     public double correct_x;
     public double correct_y;
     private Runnable on_piece_placed;
-    void set_position (Pane pane)
+
+    void set_position (Pane pane, int size)
     {
+        double factor = 0.7;
         Random random = new Random();
-        double x = random.nextDouble() * (getImage().getWidth());
-        double y = random.nextDouble() * (getImage().getHeight());
+        double x = random.nextDouble() * getImage().getWidth() * size * factor;
+        double y = random.nextDouble() * getImage().getHeight() * size * factor;
         pane.getChildren().add(this);
 
         setLayoutX(x);
         setLayoutY(y);
     }
 
-    private void set_draggable_piece()
+    private void set_draggable_piece(int size)
     {
         double[] initial_position = new double[2];
         setOnMousePressed(e ->
@@ -291,6 +309,17 @@ class Piece extends ImageView
         setOnMouseReleased(e ->
         {
             double tolerance = getImage().getWidth() / 3;
+
+                if(e.getSceneX() < getImage().getWidth() / 5)
+                    setLayoutX(e.getSceneX() - getImage().getWidth());
+                if(e.getSceneX() > getScene().getWidth() - getImage().getWidth() / 5)
+                    setLayoutX(getImage().getWidth() * size);
+
+                if(e.getSceneY() < getImage().getHeight() / 5)
+                    setLayoutY(e.getSceneY() - getImage().getHeight() / size);
+                if(e.getSceneY() > getScene().getHeight() - getImage().getHeight() / 5)
+                    setLayoutY((getScene().getHeight() - 2 * getImage().getHeight()));
+
             if(Math.abs(getLayoutX() - correct_x) <= tolerance && Math.abs(getLayoutY() - correct_y) <= tolerance)
             {
                 setLayoutX(correct_x);
@@ -315,10 +344,11 @@ class Piece extends ImageView
         return (Math.abs(getLayoutX()) == correct_x && Math.abs(getLayoutY()) == correct_y);
     }
 
-    Piece(String direction, Runnable on_piece_placed)
+    Piece(String direction, Runnable on_piece_placed, int size)
     {
         setImage(new Image(getClass().getResourceAsStream(direction)));
-        set_draggable_piece();
+        set_draggable_piece(size);
         this.on_piece_placed = on_piece_placed;
+        setPickOnBounds(false);
     }
 }
