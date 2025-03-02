@@ -16,6 +16,8 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -32,6 +34,8 @@ public class Rompecabezas extends Stage
     private Timeline timeline;
     private boolean timer_started;
     private Stage win_menu, mode_menu;
+    final int string_size = 9;
+    private String archive = "scores.oveja";
 
     public void create_ui()
     {
@@ -76,6 +80,9 @@ public class Rompecabezas extends Stage
 
     public void create_menu_selection()
     {
+        String hard_hs = read_highest_score(archive, 2);
+        String easy_hs = read_highest_score(archive, 0);
+        String medium_hs = read_highest_score(archive, 1);
         Label difficulty = new Label("Dificultad");
         Button easy  = new Button("Fácil");
         easy.setPrefSize(120, 20);
@@ -88,9 +95,9 @@ public class Rompecabezas extends Stage
         vbox_buttons.setAlignment(Pos.CENTER_LEFT);
 
         Label best_time = new Label("Mejor tiempo");
-        Label high_score_easy = new Label("21:09:24");
-        Label high_score_medium = new Label("21:09:24");
-        Label high_score_hard = new Label("21:09:24");
+        Label high_score_easy = new Label(easy_hs == null ? "--:--:--" : easy_hs);
+        Label high_score_medium = new Label(medium_hs == null  ? "--:--:--" : medium_hs);
+        Label high_score_hard = new Label(hard_hs == null  ? "--:--:--" : hard_hs);
         VBox vbox_labels = new VBox(best_time, high_score_easy, high_score_medium, high_score_hard);
         vbox_labels.setSpacing(20);
         vbox_labels.setAlignment(Pos.TOP_RIGHT);
@@ -145,7 +152,11 @@ public class Rompecabezas extends Stage
         if(pieces.size() == n)
             reset();
         else
+        {
+            String best_score = read_highest_score(archive, (int)(Math.sqrt(n) - 2));
             create_pieces(n);
+            best_time.setText("Mejor tiempo: " + (best_score == null ? "--:--:--" : best_score));
+        }
         win_menu.hide();
         mode_menu.hide();
     }
@@ -216,6 +227,43 @@ public class Rompecabezas extends Stage
         }
     }
 
+    void write_highest_score(String archive, int index)
+    {
+        try
+        {
+            RandomAccessFile raf = new RandomAccessFile(archive, "rw");
+            {
+                int postion = index * string_size;
+                raf.seek(postion);
+                raf.write(timer.getText().getBytes(StandardCharsets.UTF_8));
+                System.out.println("TIEMPO ESCRITO EN POSICIÓN " + postion + ": " + timer.getText());
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    String read_highest_score(String archive, int index)
+    {
+        try
+        {
+            RandomAccessFile raf = new RandomAccessFile(archive, "r");
+            int position = index * string_size;
+            raf.seek(position);
+            byte[] buffer = new byte[string_size];
+            raf.read(buffer);
+            return new String(buffer, StandardCharsets.UTF_8).trim();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            return null;
+        }
+
+    }
+
     void reset()
     {
         stop_time();
@@ -246,8 +294,7 @@ public class Rompecabezas extends Stage
                 seconds = 0;
                 minutes++;
             }
-            String text = "Tu tiempo: " + (minutes == 0 ? "0:" : minutes + ":") + (seconds == 0 ? "0:" : seconds + ":") +
-                    (miliseconds == 0 ? "0-:" : miliseconds);
+            String text = String.format("Tu tiempo: %02d:%02d:%03d", minutes, seconds, miliseconds);
             timer.setText(text);
         }));
         timeline.setCycleCount(Timeline.INDEFINITE);
@@ -265,10 +312,17 @@ public class Rompecabezas extends Stage
 
     public Rompecabezas()
     {
-        create_ui();
-        create_menu_selection();
-        win_menu();
-        setScene(scene);
+        try
+        {
+            create_ui();
+            create_menu_selection();
+            win_menu();
+            setScene(scene);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
     }
 }
 
