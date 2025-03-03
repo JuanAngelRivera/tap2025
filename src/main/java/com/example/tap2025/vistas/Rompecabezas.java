@@ -15,7 +15,6 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -39,7 +38,7 @@ public class Rompecabezas extends Stage
     private String archive = "scores.oveja", hard_hs, easy_hs, medium_hs;
 
     public void create_ui()
-    {
+        {
         reset = new Button("Reiniciar");
         reset.setOnAction(e -> reset());
         change_difficulty = new Button("Cambiar dificultad");
@@ -277,19 +276,17 @@ public class Rompecabezas extends Stage
         placed_pieces++;
         if (placed_pieces == pieces.size())
         {
-            update_score();
+            stop_time();
             int position = (int) (Math.sqrt(pieces.size()) - 2);
             String recorded_time = read_highest_score(archive, position);
             String new_time = timer.getText().split(" ")[1];
-            System.out.println("TIEMPO DEL TIMER " + new_time);
-            stop_time();
-            if (recorded_time == null || recorded_time.equals("") || new_time.compareTo(recorded_time) < 0) {
+            update_score();
+            if (recorded_time == null || recorded_time.equals("") || new_time.compareTo(recorded_time) < 0)
+            {
                 write_highest_score(archive, position);
                 best_time.setText("Mejor tiempo: " + read_highest_score(archive, position));
                 final_time.setText("Nuevo récord: " + read_highest_score(archive, position));
-            } else
-                System.out.println("NO SE ESCRIBIO NADA EN POSICION " + position + " POR QUE " + recorded_time + " ES MENOR QUE " +
-                        timer.getText());
+            }
             String archive = get_archive(pieces.size());
             write(archive);
             win_menu.show();
@@ -313,7 +310,6 @@ public class Rompecabezas extends Stage
                 raf.seek(postion);
                 String text = timer.getText().split(" ")[1];
                 raf.write(text.getBytes(StandardCharsets.UTF_8));
-                System.out.println("TIEMPO ESCRITO EN POSICIÓN " + postion + ": " + text);
             }
         }
         catch (Exception e)
@@ -331,7 +327,6 @@ public class Rompecabezas extends Stage
                 raf.seek(raf.length());
                 String text = timer.getText().split(" ")[1];
                 raf.write(text.getBytes(StandardCharsets.UTF_8));
-                System.out.println("TIEMPO ESCRITO AL FINAL DE " + archive + text);
             }
         }
         catch (Exception e)
@@ -516,11 +511,6 @@ class Piece extends ImageView
         setOnMousePressed(null);
         setOnMouseDragged(null);
         setOnMouseReleased(null);
-    }
-
-    public boolean placed_correctly()
-    {
-        return (Math.abs(getLayoutX()) == correct_x && Math.abs(getLayoutY()) == correct_y);
     }
 
     Piece(String direction, Runnable on_piece_placed, int size)
