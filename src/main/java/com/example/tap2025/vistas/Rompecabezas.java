@@ -19,12 +19,13 @@ import javafx.util.Duration;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class Rompecabezas extends Stage
 {
     private Scene scene;
-    private VBox vbox;
+    private VBox vbox, vbox_win_menu;
     private HBox hbox_menu, hbox_menu_left, hbox_menu_right,hbox_board;
     private Pane pane_pieces;
     private Button reset, change_difficulty;
@@ -35,7 +36,7 @@ public class Rompecabezas extends Stage
     private boolean timer_started;
     private Stage win_menu, mode_menu;
     final int string_size = 9;
-    private String archive = "scores.oveja";
+    private String archive = "scores.oveja", hard_hs, easy_hs, medium_hs;
 
     public void create_ui()
     {
@@ -45,6 +46,7 @@ public class Rompecabezas extends Stage
         change_difficulty.setOnAction(e ->
         {
             timeline.stop();
+            update_score();
             mode_menu.show();
         });
         hbox_menu_left = new HBox(reset, change_difficulty);
@@ -80,9 +82,9 @@ public class Rompecabezas extends Stage
 
     public void create_menu_selection()
     {
-        String hard_hs = read_highest_score(archive, 2);
-        String easy_hs = read_highest_score(archive, 0);
-        String medium_hs = read_highest_score(archive, 1);
+        hard_hs = read_highest_score(archive, 2);
+        easy_hs = read_highest_score(archive, 0);
+        medium_hs = read_highest_score(archive, 1);
         Label difficulty = new Label("Dificultad");
         Button easy  = new Button("Fácil");
         easy.setPrefSize(120, 20);
@@ -95,14 +97,25 @@ public class Rompecabezas extends Stage
         vbox_buttons.setAlignment(Pos.CENTER_LEFT);
 
         Label best_time = new Label("Mejor tiempo");
-        Label high_score_easy = new Label(easy_hs == null ? "--:--:--" : easy_hs);
-        Label high_score_medium = new Label(medium_hs == null  ? "--:--:--" : medium_hs);
-        Label high_score_hard = new Label(hard_hs == null  ? "--:--:--" : hard_hs);
+        Label high_score_easy = new Label((easy_hs == null || easy_hs.isEmpty()) ? "--:--:--" : easy_hs);
+        Label high_score_medium = new Label((medium_hs == null  || medium_hs.isEmpty()) ? "--:--:--" : medium_hs);
+        Label high_score_hard = new Label((hard_hs == null || hard_hs.isEmpty())? "--:--:--" : hard_hs);
         VBox vbox_labels = new VBox(best_time, high_score_easy, high_score_medium, high_score_hard);
         vbox_labels.setSpacing(20);
         vbox_labels.setAlignment(Pos.TOP_RIGHT);
 
-        HBox hbox = new HBox(vbox_buttons, vbox_labels);
+        Label all_scores = new Label("Todas las puntuaciones");
+        Button easy_scores = new Button("Fácil");
+        easy_scores.setPrefSize(120, 20);
+        Button medium_scores = new Button("Normal");
+        medium_scores.setPrefSize(120, 20);
+        Button hard_scores = new Button("Difícil");
+        hard_scores.setPrefSize(120, 20);
+        VBox vbox_scores = new VBox(all_scores, easy_scores, medium_scores, hard_scores);
+        vbox_scores.setSpacing(20);
+        vbox_scores.setAlignment(Pos.CENTER_RIGHT);
+
+        HBox hbox = new HBox(vbox_buttons, vbox_labels, vbox_scores);
         hbox.setSpacing(30);
         hbox.setAlignment(Pos.CENTER);
         hbox.setPadding(new Insets(10, 10, 10, 10));
@@ -115,6 +128,9 @@ public class Rompecabezas extends Stage
         easy.setOnAction(e -> config(4));
         medium.setOnAction(e -> config(9));
         hard.setOnAction(e -> config(16));
+        easy_scores.setOnAction(e -> score_menu(4));
+        medium_scores.setOnAction(e -> score_menu(9));
+        hard_scores.setOnAction(e -> score_menu(16));
         mode_menu.show();
         mode_menu.setOnHidden(e ->
         {
@@ -135,16 +151,60 @@ public class Rompecabezas extends Stage
         hbox.setAlignment(Pos.CENTER);
         hbox.setSpacing(10);
         final_time = new Label("Contador: --:--:--");
-        VBox vbox = new VBox(label, final_time, hbox);
-        vbox.setPadding(new Insets(10, 10, 10, 10));
-        vbox.setSpacing(10);
-        vbox.setAlignment(Pos.CENTER);
-        Scene scene = new Scene(vbox);
+        vbox_win_menu = new VBox(label, final_time, hbox);
+        vbox_win_menu.setPadding(new Insets(10, 10, 10, 10));
+        vbox_win_menu.setSpacing(10);
+        vbox_win_menu.setAlignment(Pos.CENTER);
+        Scene scene = new Scene(vbox_win_menu);
         scene.getStylesheets().add(getClass().getResource("/styles/rompecabezas.css").toExternalForm());
         win_menu = new Stage();
         win_menu.setScene(scene);
         win_menu.setTitle("GANASTE");
         win_menu.setResizable(false);
+    }
+
+    public void score_menu(int mode)
+    {
+        List<String> registers = get_score_registers(mode);
+        VBox vbox = new VBox();
+        String title = "Ultimos tiempos para la dificultad " + get_difficulty(mode);
+        Label Title = new Label(title);
+        vbox.getChildren().add(Title);
+        for (int i = 0; i < registers.size(); i++)
+        {
+            Label label = new Label("- " + registers.get(i));
+            vbox.getChildren().add(label);
+        }
+        if (registers.isEmpty())
+            vbox.getChildren().add(new Label("No hay ningun registro aun!"));
+        vbox.setPadding(new Insets(10, 10, 10, 10));
+        Scene scene = new Scene(vbox);
+        scene.getStylesheets().add(getClass().getResource("/styles/rompecabezas.css").toExternalForm());
+        Stage score_menu = new Stage();
+        score_menu.setScene(scene);
+        score_menu.setTitle(title);
+        score_menu.show();
+    }
+
+    public List<String> get_score_registers(int mode)
+    {
+        String archive  = get_archive(mode);
+        List<String> registers = new ArrayList<String>();
+        try
+        {
+            RandomAccessFile raf = new RandomAccessFile(archive , "r");
+            byte[] buffer = new byte[string_size];
+            while(raf.read(buffer) == string_size)
+            {
+                String register = new String(buffer);
+                registers.add(register);
+            }
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        return registers;
     }
 
     private void config(int n)
@@ -195,8 +255,6 @@ public class Rompecabezas extends Stage
                 piece.correct_x = (i * piece.getImage().getWidth());
                 piece.correct_y = (j * piece.getImage().getHeight());
                 pieces.add(piece);
-                System.out.println("TAMAÑO PARA PIEZA " + i + "-" + j + " " + piece.getImage().getWidth() + "x" + piece.getImage().getHeight());
-                //System.out.println("Pieza " + i + " " + j + " x correcta " + piece.correct_x + " y correcta " + piece.correct_y );
             }
         }
         for (Piece piece :  pieces)
@@ -205,9 +263,6 @@ public class Rompecabezas extends Stage
         }
         show();
         start_time();
-        System.out.println("TAMAÑO H DEL PANE " + pane_pieces.getWidth());
-        System.out.println("TAMAÑO DE LA PIEZA " + pieces.get(0).getImage().getWidth());
-        System.out.println("TAMAÑO DE TODAS LAS PIEZAS " + (pieces.get(0).getImage().getWidth() * size));
     }
 
     void board_config(int size, ImageView piece)
@@ -222,9 +277,30 @@ public class Rompecabezas extends Stage
         placed_pieces++;
         if (placed_pieces == pieces.size())
         {
+            update_score();
+            int position = (int) (Math.sqrt(pieces.size()) - 2);
+            String recorded_time = read_highest_score(archive, position);
+            String new_time = timer.getText().split(" ")[1];
+            System.out.println("TIEMPO DEL TIMER " + new_time);
             stop_time();
+            if (recorded_time == null || recorded_time.equals("") || new_time.compareTo(recorded_time) < 0) {
+                write_highest_score(archive, position);
+                best_time.setText("Mejor tiempo: " + read_highest_score(archive, position));
+                final_time.setText("Nuevo récord: " + read_highest_score(archive, position));
+            } else
+                System.out.println("NO SE ESCRIBIO NADA EN POSICION " + position + " POR QUE " + recorded_time + " ES MENOR QUE " +
+                        timer.getText());
+            String archive = get_archive(pieces.size());
+            write(archive);
             win_menu.show();
         }
+    }
+
+    void update_score()
+    {
+        easy_hs = read_highest_score(archive, 0);
+        medium_hs = read_highest_score(archive, 1);
+        hard_hs = read_highest_score(archive, 2);
     }
 
     void write_highest_score(String archive, int index)
@@ -235,8 +311,27 @@ public class Rompecabezas extends Stage
             {
                 int postion = index * string_size;
                 raf.seek(postion);
-                raf.write(timer.getText().getBytes(StandardCharsets.UTF_8));
-                System.out.println("TIEMPO ESCRITO EN POSICIÓN " + postion + ": " + timer.getText());
+                String text = timer.getText().split(" ")[1];
+                raf.write(text.getBytes(StandardCharsets.UTF_8));
+                System.out.println("TIEMPO ESCRITO EN POSICIÓN " + postion + ": " + text);
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    void write(String archive)
+    {
+        try
+        {
+            RandomAccessFile raf = new RandomAccessFile(archive, "rw");
+            {
+                raf.seek(raf.length());
+                String text = timer.getText().split(" ")[1];
+                raf.write(text.getBytes(StandardCharsets.UTF_8));
+                System.out.println("TIEMPO ESCRITO AL FINAL DE " + archive + text);
             }
         }
         catch (Exception e)
@@ -294,7 +389,7 @@ public class Rompecabezas extends Stage
                 seconds = 0;
                 minutes++;
             }
-            String text = String.format("Tu tiempo: %02d:%02d:%03d", minutes, seconds, miliseconds);
+            String text = String.format("Contador: %02d:%02d:%03d", minutes, seconds, miliseconds);
             timer.setText(text);
         }));
         timeline.setCycleCount(Timeline.INDEFINITE);
@@ -310,13 +405,43 @@ public class Rompecabezas extends Stage
         }
     }
 
+    String get_archive(int mode)
+    {
+        switch (mode)
+        {
+            case 4:
+                return "easy_scores.oveja";
+            case 9:
+                return "medium_scores.oveja";
+            case 16:
+                return "hard_scores.oveja";
+            default:
+                return null;
+        }
+    }
+
+    String get_difficulty(int mode)
+    {
+        switch (mode)
+        {
+            case 4:
+                return "fácil";
+            case 9:
+                return "medium";
+            case 16:
+                return "hard";
+        }
+        return null;
+    }
+
     public Rompecabezas()
     {
         try
         {
+            win_menu();
             create_ui();
             create_menu_selection();
-            win_menu();
+
             setScene(scene);
         }
         catch (Exception e)
