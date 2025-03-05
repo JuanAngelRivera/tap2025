@@ -9,7 +9,8 @@ module com.example.tap2025
 
     opens com.example.tap2025 to javafx.fxml;
     opens src.com.restaurante to javafx.fxml;
-    opens src.com.restaurante.modelos;
     exports src.com.restaurante.modelos;
+    exports  src.com.restaurante.vistas;
+    exports  src.com.restaurante.componentes;
     exports com.example.tap2025;
 }
