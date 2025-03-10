@@ -6,6 +6,7 @@ module com.example.tap2025
     requires mysql.connector.j;
     requires java.sql;
     requires java.management;
+    requires java.desktop;
 
     opens com.example.tap2025 to javafx.fxml;
     opens src.com.restaurante to javafx.fxml;
