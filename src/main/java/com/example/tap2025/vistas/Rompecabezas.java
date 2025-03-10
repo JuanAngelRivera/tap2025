@@ -422,9 +422,9 @@ public class Rompecabezas extends Stage
             case 4:
                 return "fácil";
             case 9:
-                return "medium";
+                return "normal";
             case 16:
-                return "hard";
+                return "dificil";
         }
         return null;
     }
